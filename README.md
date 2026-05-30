@@ -46,48 +46,48 @@
 - `api_key`：全局统一 API 密钥，所有接口共享（请到柠柚API https://api.nycnm.cn 注册账号获取）
 
 - `enable_douyin`：开启或关闭抖音热搜
-- `douyin_api`：抖音接口地址（默认 `https://api.nycnm.cn/API/douyinrs.php`）
+- `douyin_api`：抖音接口地址（默认 `https://api.nycnm.cn/api/v2/douyinrs`）
 - `douyin_format`：抖音返回格式，`text|image`（默认 `image`）
 
 - `enable_xhs`：开启或关闭小红书热搜
-- `xhs_api`：小红书接口地址（默认 `https://api.nycnm.cn/API/xhsrs.php`）
+- `xhs_api`：小红书接口地址（默认 `https://api.nycnm.cn/api/v2/xhsrs`）
 - `xhs_format`：小红书返回格式，`text|image`（默认 `image`）
 
 - `enable_zhihu`：开启或关闭知乎热搜
-- `zhihu_api`：知乎接口地址（默认 `https://api.nycnm.cn/API/zhihu.php`）
+- `zhihu_api`：知乎接口地址（默认 `https://api.nycnm.cn/api/v2/zhihu`）
 - `zhihu_format`：知乎返回格式，`text|image`（默认 `image`）
 
 - `enable_weibo`：开启或关闭微博热搜
-- `weibo_api`：微博接口地址（默认 `https://api.nycnm.cn/API/wb.php`）
+- `weibo_api`：微博接口地址（默认 `https://api.nycnm.cn/api/v2/wb`）
 - `weibo_format`：微博返回格式，`text|image`（默认 `image`）
 
 - `enable_baidu`：开启或关闭百度热搜
-- `baidu_api`：百度接口地址（默认 `https://api.nycnm.cn/API/baidu.php`）
+- `baidu_api`：百度接口地址（默认 `https://api.nycnm.cn/api/v2/baidu`）
 - `baidu_type`：百度榜单类型 `hot|teleplay|tieba`（默认 `hot`）
 - `baidu_format`：百度返回格式，`text|image`（默认 `image`）
 
 - `enable_dcd`：开启或关闭懂车帝热搜
-- `dcd_api`：懂车帝接口地址（默认 `https://api.nycnm.cn/API/dongchedi.php`）
+- `dcd_api`：懂车帝接口地址（默认 `https://api.nycnm.cn/api/v2/dongchedi`）
 - `dcd_format`：懂车帝返回格式，`text|image`（默认 `image`）
 
 - `enable_bilibili`：开启或关闭哔哩哔哩热搜
-- `bilibili_api`：哔哩哔哩接口地址（默认 `https://api.nycnm.cn/API/bilibilirs.php`）
+- `bilibili_api`：哔哩哔哩接口地址（默认 `https://api.nycnm.cn/api/v2/bilibilirs`）
 - `bilibili_format`：哔哩哔哩返回格式，`text|image`（默认 `image`）
 
 - `enable_toutiao`：开启或关闭头条热搜
-- `toutiao_api`：头条接口地址（默认 `https://api.nycnm.cn/API/toutiao.php`）
+- `toutiao_api`：头条接口地址（默认 `https://api.nycnm.cn/api/v2/toutiao`）
 - `toutiao_format`：头条返回格式，`text|image`（默认 `image`）
 
 - `enable_tencent`：开启或关闭腾讯热搜
-- `tencent_api`：腾讯接口地址（默认 `https://api.nycnm.cn/API/txxw.php`，使用 `type` 指定返回格式）
+- `tencent_api`：腾讯接口地址（默认 `https://api.nycnm.cn/api/v2/txxw`，使用 `type` 指定返回格式）
 - `tencent_format`：腾讯返回格式，`text|image`（默认 `image`）
 
 - `enable_quark`：开启或关闭夸克热搜
-- `quark_api`：夸克接口地址（默认 `https://api.nycnm.cn/API/quark.php`）
+- `quark_api`：夸克接口地址（默认 `https://api.nycnm.cn/api/v2/quark`）
 - `quark_format`：夸克返回格式，`text|image`（默认 `image`）
 
 - `enable_maoyan`：开启或关闭猫眼票房
-- `maoyan_api`：猫眼接口地址（默认 `https://api.nycnm.cn/API/maoyan.php`）
+- `maoyan_api`：猫眼接口地址（默认 `https://api.nycnm.cn/api/v2/maoyan`）
 - `maoyan_type`：猫眼榜单类型 `movie|tv|web|all`（默认 `all`）
   - 不带关键词时默认返回 `hot`（百度）和 `all`（猫眼）内容；
   - 百度可在指令后带中文关键词，如“贴吧”“电视剧”来分别查看 `tieba` 或 `teleplay`；
@@ -95,79 +95,79 @@
 - `maoyan_format`：猫眼返回格式，`text|image`（默认 `image`）
 
 - `enable_douban`：开启或关闭豆瓣热榜
-- `douban_api`：豆瓣接口地址（默认 `https://api.nycnm.cn/API/douban.php`）
+- `douban_api`：豆瓣接口地址（默认 `https://api.nycnm.cn/api/v2/douban`）
 - `douban_format`：豆瓣返回格式，`text|image`（默认 `image`）
 
 - `enable_kr36`：开启或关闭36氪热搜
-- `kr36_api`：36氪接口地址（默认 `https://api.nycnm.cn/API/36kr.php`）
+- `kr36_api`：36氪接口地址（默认 `https://api.nycnm.cn/api/v2/36kr`）
 - `kr36_format`：36氪返回格式，`text|image`（默认 `image`）
 
 - `enable_cto51`：开启或关闭51CTO热搜
-- `cto51_api`：51CTO接口地址（默认 `https://api.nycnm.cn/API/51cto.php`）
+- `cto51_api`：51CTO接口地址（默认 `https://api.nycnm.cn/api/v2/51cto`）
 - `cto51_format`：51CTO返回格式，`text|image`（默认 `image`）
 
 - `enable_pojie52`：开启或关闭52破解热搜
-- `pojie52_api`：52破解接口地址（默认 `https://api.nycnm.cn/API/52pojie.php`）
+- `pojie52_api`：52破解接口地址（默认 `https://api.nycnm.cn/api/v2/52pojie`）
 - `pojie52_format`：52破解返回格式，`text|image`（默认 `image`）
 
 - `enable_acfun`：开启或关闭AcFun热搜
-- `acfun_api`：AcFun接口地址（默认 `https://api.nycnm.cn/API/acfun.php`）
+- `acfun_api`：AcFun接口地址（默认 `https://api.nycnm.cn/api/v2/acfun`）
 - `acfun_format`：AcFun返回格式，`text|image`（默认 `image`）
 
 - `enable_csdn`：开启或关闭CSDN热搜
-- `csdn_api`：CSDN接口地址（默认 `https://api.nycnm.cn/API/csdn.php`）
+- `csdn_api`：CSDN接口地址（默认 `https://api.nycnm.cn/api/v2/csdn`）
 - `csdn_format`：CSDN返回格式，`text|image`（默认 `image`）
 
 - `enable_hellogithub`：开启或关闭HelloGitHub热搜
-- `hellogithub_api`：HelloGitHub接口地址（默认 `https://api.nycnm.cn/API/hellogithub.php`）
+- `hellogithub_api`：HelloGitHub接口地址（默认 `https://api.nycnm.cn/api/v2/hellogithub`）
 - `hellogithub_format`：HelloGitHub返回格式，`text|image`（默认 `image`）
 
 - `enable_miyoushe`：开启或关闭米游社热搜
-- `miyoushe_api`：米游社接口地址（默认 `https://api.nycnm.cn/API/miyoushe.php`）
+- `miyoushe_api`：米游社接口地址（默认 `https://api.nycnm.cn/api/v2/miyoushe`）
 - `miyoushe_format`：米游社返回格式，`text|image`（默认 `image`）
 
 - `enable_ifanr`：开启或关闭爱范儿热搜
-- `ifanr_api`：爱范儿接口地址（默认 `https://api.nycnm.cn/API/ifanr.php`）
+- `ifanr_api`：爱范儿接口地址（默认 `https://api.nycnm.cn/api/v2/ifanr`）
 - `ifanr_format`：爱范儿返回格式，`text|image`（默认 `image`）
 
 - `enable_ithome`：开启或关闭IT之家热搜
-- `ithome_api`：IT之家接口地址（默认 `https://api.nycnm.cn/API/xijiayi.php`）
+- `ithome_api`：IT之家接口地址（默认 `https://api.nycnm.cn/api/v2/xijiayi`）
 - `ithome_format`：IT之家返回格式，`text|image`（默认 `image`）
 
 - `enable_juejin`：开启或关闭掘金热搜
-- `juejin_api`：掘金接口地址（默认 `https://api.nycnm.cn/API/juejin.php`）
+- `juejin_api`：掘金接口地址（默认 `https://api.nycnm.cn/api/v2/juejin`）
 - `juejin_format`：掘金返回格式，`text|image`（默认 `image`）
 
 - `enable_netease`：开启或关闭网易新闻热搜
-- `netease_api`：网易新闻接口地址（默认 `https://api.nycnm.cn/API/netease.php`）
+- `netease_api`：网易新闻接口地址（默认 `https://api.nycnm.cn/api/v2/netease`）
 - `netease_format`：网易新闻返回格式，`text|image`（默认 `image`）
 
 - `enable_sina`：开启或关闭新浪新闻热搜
-- `sina_api`：新浪新闻接口地址（默认 `https://api.nycnm.cn/API/sina.php`）
+- `sina_api`：新浪新闻接口地址（默认 `https://api.nycnm.cn/api/v2/sina`）
 - `sina_format`：新浪新闻返回格式，`text|image`（默认 `image`）
 
 - `enable_sspai`：开启或关闭少数派热搜
-- `sspai_api`：少数派接口地址（默认 `https://api.nycnm.cn/API/sspai.php`）
+- `sspai_api`：少数派接口地址（默认 `https://api.nycnm.cn/api/v2/sspai`）
 - `sspai_format`：少数派返回格式，`text|image`（默认 `image`）
 
 - `enable_thepaper`：开启或关闭澎湃新闻热搜
-- `thepaper_api`：澎湃新闻接口地址（默认 `https://api.nycnm.cn/API/thepaper.php`）
+- `thepaper_api`：澎湃新闻接口地址（默认 `https://api.nycnm.cn/api/v2/thepaper`）
 - `thepaper_format`：澎湃新闻返回格式，`text|image`（默认 `image`）
 
 - `enable_weatheralarm`：开启或关闭气象预警
-- `weatheralarm_api`：气象预警接口地址（默认 `https://api.nycnm.cn/API/weatheralarm.php`）
+- `weatheralarm_api`：气象预警接口地址（默认 `https://api.nycnm.cn/api/v2/weatheralarm`）
 - `weatheralarm_format`：气象预警返回格式，`text|image`（默认 `image`）
 
 - `enable_weread`：开启或关闭微信读书热搜
-- `weread_api`：微信读书接口地址（默认 `https://api.nycnm.cn/API/weread.php`）
+- `weread_api`：微信读书接口地址（默认 `https://api.nycnm.cn/api/v2/weread`）
 - `weread_format`：微信读书返回格式，`text|image`（默认 `image`）
 
 - `enable_yicai`：开启或关闭第一财经热搜
-- `yicai_api`：第一财经接口地址（默认 `https://api.nycnm.cn/API/yicai.php`）
+- `yicai_api`：第一财经接口地址（默认 `https://api.nycnm.cn/api/v2/yicai`）
 - `yicai_format`：第一财经返回格式，`text|image`（默认 `image`）
 
 - `enable_yystv`：开启或关闭游研社热搜
-- `yystv_api`：游研社接口地址（默认 `https://api.nycnm.cn/API/yystv.php`）
+- `yystv_api`：游研社接口地址（默认 `https://api.nycnm.cn/api/v2/yystv`）
 - `yystv_format`：游研社返回格式，`text|image`（默认 `image`）
 
 ## 定时推送与群组配置说明
