@@ -5,6 +5,18 @@
     "hint": "统一密钥，所有接口共享",
     "default": ""
   },
+  "enable_memory_filter": {
+    "description": "启用AI偏好过滤推荐",
+    "type": "bool",
+    "hint": "开启后，无论原配置为何种格式，都会强制使用文本请求，并结合你填写的偏好内容推荐感兴趣的热点。",
+    "default": false
+  },
+  "user_preference": {
+    "description": "自定义偏好内容",
+    "type": "string",
+    "hint": "当启用AI偏好过滤推荐时，请填写你感兴趣的内容（如：科技、游戏、前端开发）。留空则让大模型自行发挥。",
+    "default": ""
+  },
   "groups": {
     "description": "推送群组列表",
     "type": "list",
@@ -44,9 +56,9 @@
   "douyin_api": {
     "description": "抖音热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/douyinrs.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/douyinrs 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/douyinrs.php"
+    "default": "https://api.nycnm.cn/api/v2/douyinrs"
   },
   "douyin_format": {
     "description": "抖音接口返回格式",
@@ -63,9 +75,9 @@
   "xhs_api": {
     "description": "小红书热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/xhsrs.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/xhsrs 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/xhsrs.php"
+    "default": "https://api.nycnm.cn/api/v2/xhsrs"
   },
   "xhs_format": {
     "description": "小红书接口返回格式",
@@ -82,9 +94,9 @@
   "zhihu_api": {
     "description": "知乎热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/zhihu.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/zhihu 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/zhihu.php"
+    "default": "https://api.nycnm.cn/api/v2/zhihu"
   },
   "zhihu_format": {
     "description": "知乎接口返回格式",
@@ -102,9 +114,9 @@
   "weibo_api": {
     "description": "微博热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/wb.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/wb 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/wb.php"
+    "default": "https://api.nycnm.cn/api/v2/wb"
   },
   "weibo_format": {
     "description": "微博接口返回格式",
@@ -122,9 +134,9 @@
   "baidu_api": {
     "description": "百度热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/baidu.php 接口，参数 ?type=hot&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/baidu 接口，参数 ?type=hot&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/baidu.php"
+    "default": "https://api.nycnm.cn/api/v2/baidu"
   },
   "baidu_type": {
     "description": "百度榜单类型",
@@ -149,9 +161,9 @@
   "dcd_api": {
     "description": "懂车帝热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/dongchedi.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/dongchedi 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/dongchedi.php"
+    "default": "https://api.nycnm.cn/api/v2/dongchedi"
   },
   "dcd_format": {
     "description": "懂车帝接口返回格式",
@@ -169,9 +181,9 @@
   "bilibili_api": {
     "description": "哔哩哔哩热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/bilibilirs.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/bilibilirs 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/bilibilirs.php"
+    "default": "https://api.nycnm.cn/api/v2/bilibilirs"
   },
   "bilibili_format": {
     "description": "哔哩哔哩接口返回格式",
@@ -189,9 +201,9 @@
   "toutiao_api": {
     "description": "头条热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/toutiao.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/toutiao 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/toutiao.php"
+    "default": "https://api.nycnm.cn/api/v2/toutiao"
   },
   "toutiao_format": {
     "description": "头条接口返回格式",
@@ -209,9 +221,9 @@
   "tencent_api": {
     "description": "腾讯热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/txxw.php 接口，参数 ?type=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/txxw 接口，参数 ?type=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/txxw.php"
+    "default": "https://api.nycnm.cn/api/v2/txxw"
   },
   "tencent_format": {
     "description": "腾讯接口返回格式",
@@ -229,9 +241,9 @@
   "quark_api": {
     "description": "夸克热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/quark.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/quark 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/quark.php"
+    "default": "https://api.nycnm.cn/api/v2/quark"
   },
   "quark_format": {
     "description": "夸克接口返回格式",
@@ -249,9 +261,9 @@
   "maoyan_api": {
     "description": "猫眼票房API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/maoyan.php 接口，参数 ?type=movie&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/maoyan 接口，参数 ?type=movie&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/maoyan.php"
+    "default": "https://api.nycnm.cn/api/v2/maoyan"
   },
   "maoyan_type": {
     "description": "猫眼榜单类型",
@@ -275,9 +287,9 @@
   "douban_api": {
     "description": "豆瓣热榜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/douban.php 接口，参数 ?category=...&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/douban 接口，参数 ?category=...&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/douban.php"
+    "default": "https://api.nycnm.cn/api/v2/douban"
   },
   "douban_format": {
     "description": "豆瓣接口返回格式",
@@ -294,9 +306,9 @@
   "kr36_api": {
     "description": "36氪热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/36kr.php 接口，参数 ?type=...&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/36kr 接口，参数 ?type=...&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/36kr.php"
+    "default": "https://api.nycnm.cn/api/v2/36kr"
   },
   "kr36_format": {
     "description": "36氪接口返回格式",
@@ -313,9 +325,9 @@
   "cto51_api": {
     "description": "51CTO热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/51cto.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/51cto 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/51cto.php"
+    "default": "https://api.nycnm.cn/api/v2/51cto"
   },
   "cto51_format": {
     "description": "51CTO接口返回格式",
@@ -332,9 +344,9 @@
   "pojie52_api": {
     "description": "52破解热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/52pojie.php 接口，参数 ?type=...&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/52pojie 接口，参数 ?type=...&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/52pojie.php"
+    "default": "https://api.nycnm.cn/api/v2/52pojie"
   },
   "pojie52_format": {
     "description": "52破解接口返回格式",
@@ -351,9 +363,9 @@
   "acfun_api": {
     "description": "AcFun热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/acfun.php 接口，参数 ?type=...&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/acfun 接口，参数 ?type=...&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/acfun.php"
+    "default": "https://api.nycnm.cn/api/v2/acfun"
   },
   "acfun_format": {
     "description": "AcFun接口返回格式",
@@ -370,9 +382,9 @@
   "csdn_api": {
     "description": "CSDN热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/csdn.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/csdn 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/csdn.php"
+    "default": "https://api.nycnm.cn/api/v2/csdn"
   },
   "csdn_format": {
     "description": "CSDN接口返回格式",
@@ -389,9 +401,9 @@
   "hellogithub_api": {
     "description": "HelloGitHub热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/hellogithub.php 接口，参数 ?type=...&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/hellogithub 接口，参数 ?type=...&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/hellogithub.php"
+    "default": "https://api.nycnm.cn/api/v2/hellogithub"
   },
   "hellogithub_format": {
     "description": "HelloGitHub接口返回格式",
@@ -408,9 +420,9 @@
   "miyoushe_api": {
     "description": "米游社热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/miyoushe.php 接口，参数 ?game=...&type=...&format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/miyoushe 接口，参数 ?game=...&type=...&format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/miyoushe.php"
+    "default": "https://api.nycnm.cn/api/v2/miyoushe"
   },
   "miyoushe_format": {
     "description": "米游社接口返回格式",
@@ -427,9 +439,9 @@
   "ifanr_api": {
     "description": "爱范儿热搜API",
     "type": "string",
-    "hint": "使用 https://api.nycnm.cn/API/ifanr.php 接口，参数 ?format=text/image",
+    "hint": "使用 https://api.nycnm.cn/api/v2/ifanr 接口，参数 ?format=text/image",
     "obvious_hint": true,
-    "default": "https://api.nycnm.cn/API/ifanr.php"
+    "default": "https://api.nycnm.cn/api/v2/ifanr"
   },
   "ifanr_format": {
       "description": "爱范儿接口返回格式",
@@ -446,9 +458,9 @@
     "ithome_api": {
       "description": "IT之家热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/xijiayi.php 接口，参数 ?type=news/hot&format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/xijiayi 接口，参数 ?type=news/hot&format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/xijiayi.php"
+      "default": "https://api.nycnm.cn/api/v2/xijiayi"
     },
     "ithome_format": {
       "description": "IT之家接口返回格式",
@@ -465,9 +477,9 @@
     "juejin_api": {
       "description": "掘金热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/juejin.php 接口，参数 ?type=...&format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/juejin 接口，参数 ?type=...&format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/juejin.php"
+      "default": "https://api.nycnm.cn/api/v2/juejin"
     },
     "juejin_format": {
       "description": "掘金接口返回格式",
@@ -484,9 +496,9 @@
     "netease_api": {
       "description": "网易新闻热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/netease.php 接口，参数 ?format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/netease 接口，参数 ?format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/netease.php"
+      "default": "https://api.nycnm.cn/api/v2/netease"
     },
     "netease_format": {
       "description": "网易新闻接口返回格式",
@@ -503,9 +515,9 @@
     "sina_api": {
       "description": "新浪新闻热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/sina.php 接口，参数 ?type=...&format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/sina 接口，参数 ?type=...&format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/sina.php"
+      "default": "https://api.nycnm.cn/api/v2/sina"
     },
     "sina_format": {
       "description": "新浪新闻接口返回格式",
@@ -522,9 +534,9 @@
     "sspai_api": {
       "description": "少数派热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/sspai.php 接口，参数 ?type=...&format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/sspai 接口，参数 ?type=...&format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/sspai.php"
+      "default": "https://api.nycnm.cn/api/v2/sspai"
     },
     "sspai_format": {
       "description": "少数派接口返回格式",
@@ -541,12 +553,12 @@
     "thepaper_api": {
       "description": "澎湃新闻热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/thepaper.php 接口，参数 ?format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/thepaper 接口，参数 ?format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/thepaper.php"
+      "default": "https://api.nycnm.cn/api/v2/thepaper"
     },
     "thepaper_format": {
-      "description": "澎湃新闻接口返回格式",
+      "description": "知乎日报接口返回格式",
       "type": "string",
       "hint": "支持 text/image 两种",
       "options": ["text", "image"],
@@ -560,9 +572,9 @@
     "weatheralarm_api": {
       "description": "气象预警API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/weatheralarm.php 接口，参数 ?province=...&format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/weatheralarm 接口，参数 ?province=...&format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/weatheralarm.php"
+      "default": "https://api.nycnm.cn/api/v2/weatheralarm"
     },
     "weatheralarm_format": {
       "description": "气象预警接口返回格式",
@@ -579,9 +591,9 @@
     "weread_api": {
       "description": "微信读书热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/weread.php 接口，参数 ?type=...&format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/weread 接口，参数 ?type=...&format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/weread.php"
+      "default": "https://api.nycnm.cn/api/v2/weread"
     },
     "weread_format": {
       "description": "微信读书接口返回格式",
@@ -598,9 +610,9 @@
     "yicai_api": {
       "description": "第一财经热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/yicai.php 接口，参数 ?format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/yicai 接口，参数 ?format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/yicai.php"
+      "default": "https://api.nycnm.cn/api/v2/yicai"
     },
     "yicai_format": {
       "description": "第一财经接口返回格式",
@@ -617,9 +629,9 @@
     "yystv_api": {
       "description": "游研社热搜API",
       "type": "string",
-      "hint": "使用 https://api.nycnm.cn/API/yystv.php 接口，参数 ?format=text/image",
+      "hint": "使用 https://api.nycnm.cn/api/v2/yystv 接口，参数 ?format=text/image",
       "obvious_hint": true,
-      "default": "https://api.nycnm.cn/API/yystv.php"
+      "default": "https://api.nycnm.cn/api/v2/yystv"
     },
     "yystv_format": {
       "description": "游研社接口返回格式",

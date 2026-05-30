@@ -14,47 +14,60 @@ from astrbot.core.message.message_event_result import MessageChain
 PLUGIN_DATA_DIR = Path("data", "plugins_data", "astrbot_hotsearch")
 PLUGIN_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+class _CmdWrappedEvent:
+    """包装原始 event，使 get_message_str 返回伪造的指令字符串，便于在 LLM Tool 中复用现有指令 handler。"""
+
+    __slots__ = ("_event", "_fake_message")
+
+    def __init__(self, original: AstrMessageEvent, fake_message: str):
+        self._event = original
+        self._fake_message = fake_message.strip()
+
+    def get_message_str(self) -> str:
+        return self._fake_message
+
+    def __getattr__(self, name: str):
+        return getattr(self._event, name)
+
 @register(
     "astrbot_hotsearch",
     "柠柚",
     "实时热搜聚合，支持抖音/小红书/知乎/微博/百度/懂车帝/哔哩哔哩/腾讯/头条/猫眼票房/夸克/豆瓣/36氪/51CTO/52破解/AcFun/CSDN/HelloGitHub/米游社/爱范儿/IT之家/掘金/网易新闻/新浪新闻/少数派/澎湃新闻/气象预警/微信读书/第一财经/游研社，输出图片或文本",
-    "1.0.5",
+    "1.0.6",
 )
 class HotSearchPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context, config)
-        self.douyin_api = getattr(config, "douyin_api", "https://api.nycnm.cn/API/douyinrs.php")
-        self.xhs_api = getattr(config, "xhs_api", "https://api.nycnm.cn/API/xhsrs.php")
-        self.zhihu_api = getattr(config, "zhihu_api", "https://api.nycnm.cn/API/zhihu.php")
-        self.weibo_api = getattr(config, "weibo_api", "https://api.nycnm.cn/API/wb.php")
-        self.baidu_api = getattr(config, "baidu_api", "https://api.nycnm.cn/API/baidu.php")
-        self.dcd_api = getattr(config, "dcd_api", "https://api.nycnm.cn/API/dongchedi.php")
-        self.bilibili_api = getattr(config, "bilibili_api", "https://api.nycnm.cn/API/bilibilirs.php")
-        self.toutiao_api = getattr(config, "toutiao_api", "https://api.nycnm.cn/API/toutiao.php")
-        self.maoyan_api = getattr(config, "maoyan_api", "https://api.nycnm.cn/API/maoyan.php")
-        self.tencent_api = getattr(config, "tencent_api", "https://api.nycnm.cn/API/txxw.php")
-        self.quark_api = getattr(config, "quark_api", "https://api.nycnm.cn/API/quark.php")
-        self.douban_api = getattr(config, "douban_api", "https://api.nycnm.cn/API/douban.php")
-        self.kr36_api = getattr(config, "kr36_api", "https://api.nycnm.cn/API/36kr.php")
-        self.cto51_api = getattr(config, "cto51_api", "https://api.nycnm.cn/API/51cto.php")
-        self.pojie52_api = getattr(config, "pojie52_api", "https://api.nycnm.cn/API/52pojie.php")
-        self.acfun_api = getattr(config, "acfun_api", "https://api.nycnm.cn/API/acfun.php")
-        self.csdn_api = getattr(config, "csdn_api", "https://api.nycnm.cn/API/csdn.php")
-        self.hellogithub_api = getattr(config, "hellogithub_api", "https://api.nycnm.cn/API/hellogithub.php")
-        self.miyoushe_api = getattr(config, "miyoushe_api", "https://api.nycnm.cn/API/miyoushe.php")
-        self.ifanr_api = getattr(config, "ifanr_api", "https://api.nycnm.cn/API/ifanr.php")
-        self.ithome_api = getattr(config, "ithome_api", "https://api.nycnm.cn/API/xijiayi.php")
-        self.juejin_api = getattr(config, "juejin_api", "https://api.nycnm.cn/API/juejin.php")
-        self.netease_api = getattr(config, "netease_api", "https://api.nycnm.cn/API/netease.php")
-        self.sina_api = getattr(config, "sina_api", "https://api.nycnm.cn/API/sina.php")
-        self.sspai_api = getattr(config, "sspai_api", "https://api.nycnm.cn/API/sspai.php")
-        self.thepaper_api = getattr(config, "thepaper_api", "https://api.nycnm.cn/API/thepaper.php")
-        self.weatheralarm_api = getattr(config, "weatheralarm_api", "https://api.nycnm.cn/API/weatheralarm.php")
-        self.weread_api = getattr(config, "weread_api", "https://api.nycnm.cn/API/weread.php")
-        self.yicai_api = getattr(config, "yicai_api", "https://api.nycnm.cn/API/yicai.php")
-        self.yystv_api = getattr(config, "yystv_api", "https://api.nycnm.cn/API/yystv.php")
+        self.douyin_api = getattr(config, "douyin_api", "https://api.nycnm.cn/api/v2/douyinrs")
+        self.xhs_api = getattr(config, "xhs_api", "https://api.nycnm.cn/api/v2/xhsrs")
+        self.zhihu_api = getattr(config, "zhihu_api", "https://api.nycnm.cn/api/v2/zhihu")
+        self.weibo_api = getattr(config, "weibo_api", "https://api.nycnm.cn/api/v2/wb")
+        self.baidu_api = getattr(config, "baidu_api", "https://api.nycnm.cn/api/v2/baidu")
+        self.dcd_api = getattr(config, "dcd_api", "https://api.nycnm.cn/api/v2/dongchedi")
+        self.bilibili_api = getattr(config, "bilibili_api", "https://api.nycnm.cn/api/v2/bilibilirs")
+        self.toutiao_api = getattr(config, "toutiao_api", "https://api.nycnm.cn/api/v2/toutiao")
+        self.maoyan_api = getattr(config, "maoyan_api", "https://api.nycnm.cn/api/v2/maoyan")
+        self.tencent_api = getattr(config, "tencent_api", "https://api.nycnm.cn/api/v2/txxw")
+        self.quark_api = getattr(config, "quark_api", "https://api.nycnm.cn/api/v2/quark")
+        self.douban_api = getattr(config, "douban_api", "https://api.nycnm.cn/api/v2/douban")
+        self.kr36_api = getattr(config, "kr36_api", "https://api.nycnm.cn/api/v2/36kr")
+        self.cto51_api = getattr(config, "cto51_api", "https://api.nycnm.cn/api/v2/51cto")
+        self.pojie52_api = getattr(config, "pojie52_api", "https://api.nycnm.cn/api/v2/52pojie")
+        self.acfun_api = getattr(config, "acfun_api", "https://api.nycnm.cn/api/v2/acfun")
+        self.csdn_api = getattr(config, "csdn_api", "https://api.nycnm.cn/api/v2/csdn")
+        self.hellogithub_api = getattr(config, "hellogithub_api", "https://api.nycnm.cn/api/v2/hellogithub")
+        self.ithome_api = getattr(config, "ithome_api", "https://api.nycnm.cn/api/v2/xijiayi")
+        self.juejin_api = getattr(config, "juejin_api", "https://api.nycnm.cn/api/v2/juejin")
+        self.netease_api = getattr(config, "netease_api", "https://api.nycnm.cn/api/v2/netease")
+        self.sina_api = getattr(config, "sina_api", "https://api.nycnm.cn/api/v2/sina")
+        self.sspai_api = getattr(config, "sspai_api", "https://api.nycnm.cn/api/v2/sspai")
+        self.thepaper_api = getattr(config, "thepaper_api", "https://api.nycnm.cn/api/v2/thepaper")
+        self.weatheralarm_api = getattr(config, "weatheralarm_api", "https://api.nycnm.cn/api/v2/weatheralarm")
+        self.weread_api = getattr(config, "weread_api", "https://api.nycnm.cn/api/v2/weread")
 
         self.global_apikey = getattr(config, "api_key", "")
+        self.enable_memory_filter = getattr(config, "enable_memory_filter", False)
+        self.user_preference = getattr(config, "user_preference", "")
         self.timeout = getattr(config, "timeout", 30)
         self.enable_douyin = getattr(config, "enable_douyin", True)
         self.enable_xhs = getattr(config, "enable_xhs", True)
@@ -161,6 +174,11 @@ class HotSearchPlugin(Star):
         if not enabled:
             yield event.plain_result(f"❌ {name}热搜已关闭")
             return
+            
+        # 如果开启了偏好过滤功能，强制使用 text 格式请求
+        if getattr(self, "enable_memory_filter", False):
+            fmt = "text"
+            
         result = await self._request_hotsearch(base_url, fmt, self.global_apikey, extra, fmt_key=fmt_key)
         if not result:
             yield event.plain_result(f"❌ 获取{name}热搜失败，请稍后重试")
@@ -173,7 +191,53 @@ class HotSearchPlugin(Star):
                 pass
             return
         if result.get("text") is not None:
-            yield event.plain_result(result["text"])
+            text_result = result["text"]
+            if getattr(self, "enable_memory_filter", False):
+                umo = getattr(event, "unified_msg_origin", None) or getattr(event, "session_id", "")
+                user_pref = getattr(self, "user_preference", "").strip()
+                try:
+                    provider_id = await self.context.get_current_chat_provider_id(umo=umo)
+                    if provider_id:
+                        pref_prompt = f"我的偏好内容是：【{user_pref}】。" if user_pref else "请根据你对我（当前用户）的了解、偏好以及历史记忆来判断。"
+                        
+                        # 尝试获取当前会话的 System Prompt（人格）
+                        sys_prompt = ""
+                        try:
+                            if hasattr(self.context, 'persona_manager'):
+                                persona_mgr = self.context.persona_manager
+                                if hasattr(persona_mgr, 'get_default_persona_v3'):
+                                    persona = persona_mgr.get_default_persona_v3(umo=umo)
+                                    if persona and isinstance(persona, dict):
+                                        sys_prompt = persona.get('prompt', '')
+                                    elif persona and hasattr(persona, 'system_prompt'):
+                                        sys_prompt = persona.system_prompt
+                        except Exception as e:
+                            logger.error(f"获取人格配置失败: {e}")
+                            
+                        system_instruction = f"你的角色设定是：\n{sys_prompt}\n\n" if sys_prompt else "请用你平时的人格和说话风格回复。\n"
+                        
+                        prompt = (
+                            f"{system_instruction}"
+                            f"以下是当前的{name}热搜内容。\n"
+                            f"{pref_prompt}\n"
+                            f"【重要要求】\n"
+                            f"1. 必须根据用户的偏好过滤出最相关的几条热点进行播报。\n"
+                            f"2. 绝对不能使用像机器或AI总结的口吻（如“根据你的偏好，我为你推荐...”）。\n"
+                            f"3. 【最核心指令】：你必须完全代入上述的“角色设定”与我对话，使用符合角色性格的口癖、动作描写和语气来告诉我这些热搜！\n"
+                            f"热搜内容：\n{text_result}"
+                        )
+                        # 这里我们不仅要传 prompt，还要确保把人格注入到系统提示词里
+                        llm_resp = await self.context.llm_generate(
+                            chat_provider_id=provider_id,
+                            prompt=prompt,
+                            system_prompt=sys_prompt if sys_prompt else None
+                        )
+                        out = (getattr(llm_resp, "completion_text", None) or "").strip()
+                        if out:
+                            text_result = out
+                except Exception as e:
+                    logger.error(f"LLM 记忆过滤失败: {e}")
+            yield event.plain_result(text_result)
             return
 
     def _calculate_sleep_time(self) -> float:
@@ -636,6 +700,116 @@ class HotSearchPlugin(Star):
         if "小说" in text or "general_novel_rising" in t: return "general_novel_rising"
         if "总榜" in text or "all" in t: return "all"
         return "rising"
+
+    @filter.regex(r"(抖音|小红书|知乎|微博|百度|懂车帝|b站|哔哩哔哩|头条|腾讯|夸克|猫眼|豆瓣|36氪|51cto|52破解|acfun|a站|csdn|github|米游社|爱范儿|it之家|掘金|网易|新浪|少数派|澎湃|气象预警|微信读书|第一财经|游研社).*(热搜|热点|热榜|榜单|新闻|有什么)", priority=999)
+    async def natural_hotsearch_interceptor(self, event: AstrMessageEvent):
+        """
+        强行拦截自然语言提问（如“今日微博热搜”、“b站有什么热点”），
+        避免大模型（尤其是带强人设时）沉迷聊天而忘记触发 Tool Call。
+        拦截后直接委托给原本的 tool_hotsearch_query 逻辑执行。
+        """
+        text = (event.get_message_str() or "").lower()
+        platforms = [
+            "抖音", "小红书", "知乎", "微博", "百度", "懂车帝", "哔哩哔哩", "b站",
+            "头条", "腾讯", "夸克", "猫眼", "豆瓣", "36氪", "51cto", "52破解",
+            "acfun", "a站", "csdn", "github", "米游社", "爱范儿", "it之家",
+            "掘金", "网易", "新浪", "少数派", "澎湃", "气象预警", "微信读书",
+            "第一财经", "游研社"
+        ]
+        
+        target_p = ""
+        for p in platforms:
+            if p in text:
+                target_p = p
+                break
+                
+        if target_p:
+            # 停止事件继续往后传递给大模型自然对话
+            event.stop_event()
+            # 强制调用原本的工具处理逻辑
+            async for r in self.tool_hotsearch_query(event, platform=target_p):
+                yield r
+
+    @filter.llm_tool(name="hotsearch_query")
+    async def tool_hotsearch_query(self, event: AstrMessageEvent, platform: str, extra_args: str = ""):
+        """查询各大平台的热搜榜单、热门话题、新闻热榜。
+        
+        【最高指令 / CRITICAL INSTRUCTION】
+        当你决定查热搜时，你必须且只能通过触发标准的 Function Call (工具调用) 来获取数据！
+        绝对不要在聊天框里写出类似 “(目的：调用热搜工具...)” 这样的假动作或旁白！
+        绝对不要输出任何“稍等”、“这就帮你查”的过渡闲聊文本！
+        任何只说不做的行为都是被严厉禁止的。请立即抛出工具调用。
+        
+        Args:
+            platform(string): 平台名称，必须是以下之一：抖音、小红书、知乎、微博、百度、懂车帝、哔哩哔哩、B站、头条、腾讯、夸克、猫眼、豆瓣、36氪、51CTO、52破解、AcFun、A站、CSDN、HelloGitHub、米游社、爱范儿、IT之家、掘金、网易新闻、新浪新闻、少数派、澎湃新闻、气象预警、微信读书、第一财经、游研社。
+            extra_args(string): 附加参数，比如猫眼支持“电影/电视剧”、豆瓣支持“国内剧/美剧”等，没有则留空。
+        """
+        p = platform.lower()
+        fake_msg = f"{platform} {extra_args}".strip()
+        wrapped = _CmdWrappedEvent(event, fake_msg)
+        
+        if p in ["抖音"]:
+            async for r in self.douyin(wrapped): yield r
+        elif p in ["小红书"]:
+            async for r in self.xhs(wrapped): yield r
+        elif p in ["知乎"]:
+            async for r in self.zhihu(wrapped): yield r
+        elif p in ["微博"]:
+            async for r in self.weibo(wrapped): yield r
+        elif p in ["百度"]:
+            async for r in self.baidu(wrapped): yield r
+        elif p in ["懂车帝"]:
+            async for r in self.dcd(wrapped): yield r
+        elif p in ["哔哩哔哩", "b站"]:
+            async for r in self.bilibili(wrapped): yield r
+        elif p in ["头条", "今日头条"]:
+            async for r in self.toutiao(wrapped): yield r
+        elif p in ["腾讯", "腾讯新闻"]:
+            async for r in self.tencent(wrapped): yield r
+        elif p in ["夸克"]:
+            async for r in self.quark(wrapped): yield r
+        elif p in ["猫眼", "猫眼票房"]:
+            async for r in self.maoyan(wrapped): yield r
+        elif p in ["豆瓣", "豆瓣热榜"]:
+            async for r in self.douban(wrapped): yield r
+        elif p in ["36氪", "36kr"]:
+            async for r in self.kr36(wrapped): yield r
+        elif p in ["51cto"]:
+            async for r in self.cto51(wrapped): yield r
+        elif p in ["52破解", "吾爱破解"]:
+            async for r in self.pojie52(wrapped): yield r
+        elif p in ["acfun", "a站"]:
+            async for r in self.acfun(wrapped): yield r
+        elif p in ["csdn"]:
+            async for r in self.csdn(wrapped): yield r
+        elif p in ["hellogithub", "github"]:
+            async for r in self.hellogithub(wrapped): yield r
+        elif p in ["米游社"]:
+            async for r in self.miyoushe(wrapped): yield r
+        elif p in ["爱范儿"]:
+            async for r in self.ifanr(wrapped): yield r
+        elif p in ["it之家"]:
+            async for r in self.ithome(wrapped): yield r
+        elif p in ["掘金"]:
+            async for r in self.juejin(wrapped): yield r
+        elif p in ["网易新闻", "网易"]:
+            async for r in self.netease(wrapped): yield r
+        elif p in ["新浪新闻", "新浪"]:
+            async for r in self.sina(wrapped): yield r
+        elif p in ["少数派"]:
+            async for r in self.sspai(wrapped): yield r
+        elif p in ["澎湃新闻", "澎湃"]:
+            async for r in self.thepaper(wrapped): yield r
+        elif p in ["气象预警", "天气预警"]:
+            async for r in self.weatheralarm(wrapped): yield r
+        elif p in ["微信读书"]:
+            async for r in self.weread(wrapped): yield r
+        elif p in ["第一财经"]:
+            async for r in self.yicai(wrapped): yield r
+        elif p in ["游研社"]:
+            async for r in self.yystv(wrapped): yield r
+        else:
+            yield event.plain_result(f"暂不支持该平台：{platform}，请检查平台名称。")
 
     @filter.command("help_hotsearch", alias={"热搜帮助", "实时热搜帮助"})
     async def show_help(self, event: AstrMessageEvent):
