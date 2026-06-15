@@ -1,7 +1,7 @@
 # 实时热搜插件（astrbot_plugin_hotsearch）
 
 ## 功能
-- 聚合抖音/小红书/知乎/微博/百度/懂车帝/哔哩哔哩/腾讯/头条/猫眼票房/夸克/豆瓣/36氪/51CTO/52破解/AcFun/CSDN/HelloGitHub/米游社/爱范儿/IT之家/掘金/网易新闻/新浪新闻/少数派/澎湃新闻/气象预警/微信读书/第一财经/游研社实时热搜
+- 聚合抖音/小红书/知乎/微博/百度/懂车帝/哔哩哔哩/腾讯/头条/猫眼票房/夸克/豆瓣/36氪/51CTO/52破解/AcFun/CSDN/HelloGitHub/米游社/爱范儿/IT之家/掘金/网易新闻/新浪新闻/少数派/澎湃新闻/气象预警/微信读书/第一财经/游研社/财联社/快手/好游快爆实时热搜
 - 指令无需参数，默认返回图片（可改为 text）
 - 支持统一 apikey 与单接口独立 apikey
 - 每个接口可单独开启/关闭
@@ -38,7 +38,11 @@
 - 微信读书热搜 (指令: 微信读书 热搜/新书/小说/总榜)
 - 第一财经热搜
 - 游研社热搜
+- 财联社热搜
+- 快手热搜
+- 好游快爆热搜
 - 热搜帮助
+
 
 ## 配置
 在 AstrBot 插件配置中填写以下项：
@@ -169,6 +173,14 @@
 - `enable_yystv`：开启或关闭游研社热搜
 - `yystv_api`：游研社接口地址（默认 `https://api.nycnm.cn/api/v2/yystv`）
 - `yystv_format`：游研社返回格式，`text|image`（默认 `image`）
+
+- `enable_cls`：开启或关闭财联社热搜
+- `cls_api`：财联社接口地址（默认 `https://api.nycnm.cn/api/v2/cls`）
+- `cls_format`：财联社返回格式，`text|image`（默认 `image`）
+
+- `enable_kuaishou`：开启或关闭快手热搜
+- `kuaishou_api`：快手接口地址（默认 `https://api.nycnm.cn/api/v2/kuaishou`）
+- `kuaishou_format`：快手返回格式，`text|image`（默认 `image`）
 
 ## 定时推送与群组配置说明
 

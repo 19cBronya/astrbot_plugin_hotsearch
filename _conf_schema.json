@@ -38,7 +38,8 @@
       "toutiao", "tencent", "quark", "maoyan", "douban", "kr36", 
       "cto51", "pojie52", "acfun", "csdn", "hellogithub", "miyoushe", 
       "ifanr", "ithome", "juejin", "netease", "sina", "sspai", 
-      "thepaper", "weatheralarm", "weread", "yicai", "yystv"
+      "thepaper", "weatheralarm", "weread", "yicai", "yystv",
+      "cls", "kuaishou", "hykb"
     ],
     "default": ["weibo"]
   },
@@ -635,6 +636,63 @@
     },
     "yystv_format": {
       "description": "游研社接口返回格式",
+      "type": "string",
+      "hint": "支持 text/image 两种",
+      "options": ["text", "image"],
+      "default": "image"
+    },
+    "enable_cls": {
+      "description": "开启或关闭财联社热搜",
+      "type": "bool",
+      "default": true
+    },
+    "cls_api": {
+      "description": "财联社热搜API",
+      "type": "string",
+      "hint": "使用 https://api.nycnm.cn/api/v2/cls 接口，参数 ?format=text/image",
+      "obvious_hint": true,
+      "default": "https://api.nycnm.cn/api/v2/cls"
+    },
+    "cls_format": {
+      "description": "财联社接口返回格式",
+      "type": "string",
+      "hint": "支持 text/image 两种",
+      "options": ["text", "image"],
+      "default": "image"
+    },
+    "enable_kuaishou": {
+      "description": "开启或关闭快手热搜",
+      "type": "bool",
+      "default": true
+    },
+    "kuaishou_api": {
+      "description": "快手热搜API",
+      "type": "string",
+      "hint": "使用 https://api.nycnm.cn/api/v2/kuaishou 接口，参数 ?format=text/image",
+      "obvious_hint": true,
+      "default": "https://api.nycnm.cn/api/v2/kuaishou"
+    },
+    "kuaishou_format": {
+      "description": "快手接口返回格式",
+      "type": "string",
+      "hint": "支持 text/image 两种",
+      "options": ["text", "image"],
+      "default": "image"
+    },
+    "enable_hykb": {
+      "description": "开启或关闭好游快爆热搜",
+      "type": "bool",
+      "default": true
+    },
+    "hykb_api": {
+      "description": "好游快爆热搜API",
+      "type": "string",
+      "hint": "使用 https://api.nycnm.cn/api/v2/hykb 接口，参数 ?format=text/image",
+      "obvious_hint": true,
+      "default": "https://api.nycnm.cn/api/v2/hykb"
+    },
+    "hykb_format": {
+      "description": "好游快爆接口返回格式",
       "type": "string",
       "hint": "支持 text/image 两种",
       "options": ["text", "image"],

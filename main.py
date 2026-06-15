@@ -32,8 +32,8 @@ class _CmdWrappedEvent:
 @register(
     "astrbot_hotsearch",
     "柠柚",
-    "实时热搜聚合，支持抖音/小红书/知乎/微博/百度/懂车帝/哔哩哔哩/腾讯/头条/猫眼票房/夸克/豆瓣/36氪/51CTO/52破解/AcFun/CSDN/HelloGitHub/米游社/爱范儿/IT之家/掘金/网易新闻/新浪新闻/少数派/澎湃新闻/气象预警/微信读书/第一财经/游研社，输出图片或文本",
-    "1.0.6",
+    "实时热搜聚合，支持抖音/小红书/知乎/微博/百度/懂车帝/哔哩哔哩/腾讯/头条/猫眼票房/夸克/豆瓣/36氪/51CTO/52破解/AcFun/CSDN/HelloGitHub/米游社/爱范儿/IT之家/掘金/网易新闻/新浪新闻/少数派/澎湃新闻/气象预警/微信读书/第一财经/游研社/财联社/快手/好游快爆，输出图片或文本",
+    "1.0.7",
 )
 class HotSearchPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -64,6 +64,9 @@ class HotSearchPlugin(Star):
         self.thepaper_api = getattr(config, "thepaper_api", "https://api.nycnm.cn/api/v2/thepaper")
         self.weatheralarm_api = getattr(config, "weatheralarm_api", "https://api.nycnm.cn/api/v2/weatheralarm")
         self.weread_api = getattr(config, "weread_api", "https://api.nycnm.cn/api/v2/weread")
+        self.cls_api = getattr(config, "cls_api", "https://api.nycnm.cn/api/v2/cls")
+        self.kuaishou_api = getattr(config, "kuaishou_api", "https://api.nycnm.cn/api/v2/kuaishou")
+        self.hykb_api = getattr(config, "hykb_api", "https://api.nycnm.cn/api/v2/hykb")
 
         self.global_apikey = getattr(config, "api_key", "")
         self.enable_memory_filter = getattr(config, "enable_memory_filter", False)
@@ -99,6 +102,9 @@ class HotSearchPlugin(Star):
         self.enable_weread = getattr(config, "enable_weread", True)
         self.enable_yicai = getattr(config, "enable_yicai", True)
         self.enable_yystv = getattr(config, "enable_yystv", True)
+        self.enable_cls = getattr(config, "enable_cls", True)
+        self.enable_kuaishou = getattr(config, "enable_kuaishou", True)
+        self.enable_hykb = getattr(config, "enable_hykb", True)
         self.douyin_format = getattr(config, "douyin_format", "image")
         self.xhs_format = getattr(config, "xhs_format", "image")
         self.zhihu_format = getattr(config, "zhihu_format", "image")
@@ -131,6 +137,9 @@ class HotSearchPlugin(Star):
         self.weread_format = getattr(config, "weread_format", "image")
         self.yicai_format = getattr(config, "yicai_format", "image")
         self.yystv_format = getattr(config, "yystv_format", "image")
+        self.cls_format = getattr(config, "cls_format", "image")
+        self.kuaishou_format = getattr(config, "kuaishou_format", "image")
+        self.hykb_format = getattr(config, "hykb_format", "image")
         
         # Scheduled Push Configs
         self.groups = getattr(config, "groups", []) or []
@@ -311,7 +320,7 @@ class HotSearchPlugin(Star):
             "ifanr": "爱范儿", "ithome": "IT之家", "juejin": "掘金", "netease": "网易新闻",
             "sina": "新浪新闻", "sspai": "少数派", "thepaper": "澎湃新闻",
             "weatheralarm": "气象预警", "weread": "微信读书", "yicai": "第一财经",
-            "yystv": "游研社"
+            "yystv": "游研社", "cls": "财联社", "kuaishou": "快手", "hykb": "好游快爆"
         }
 
         for item in self.push_items:
@@ -685,6 +694,21 @@ class HotSearchPlugin(Star):
         async for r in self._handle(event, self.yystv_api, self.yystv_format, self.enable_yystv, "游研社"):
             yield r
 
+    @filter.command("财联社热搜", alias={"cls", "财联社", "财联社榜", "财联社电报"})
+    async def cls(self, event: AstrMessageEvent):
+        async for r in self._handle(event, self.cls_api, self.cls_format, self.enable_cls, "财联社"):
+            yield r
+
+    @filter.command("快手热搜", alias={"kuaishou", "快手", "快手榜", "快手热榜"})
+    async def kuaishou(self, event: AstrMessageEvent):
+        async for r in self._handle(event, self.kuaishou_api, self.kuaishou_format, self.enable_kuaishou, "快手"):
+            yield r
+
+    @filter.command("好游快爆热搜", alias={"hykb", "好游快爆", "好游快爆榜"})
+    async def hykb(self, event: AstrMessageEvent):
+        async for r in self._handle(event, self.hykb_api, self.hykb_format, self.enable_hykb, "好游快爆"):
+            yield r
+
     def _pick_sspai_type(self, text: str) -> str:
         t = text.lower()
         if "应用" in text or "apps" in t: return "apps"
@@ -701,7 +725,7 @@ class HotSearchPlugin(Star):
         if "总榜" in text or "all" in t: return "all"
         return "rising"
 
-    @filter.regex(r"(抖音|小红书|知乎|微博|百度|懂车帝|b站|哔哩哔哩|头条|腾讯|夸克|猫眼|豆瓣|36氪|51cto|52破解|acfun|a站|csdn|github|米游社|爱范儿|it之家|掘金|网易|新浪|少数派|澎湃|气象预警|微信读书|第一财经|游研社).*(热搜|热点|热榜|榜单|新闻|有什么)", priority=999)
+    @filter.regex(r"(抖音|小红书|知乎|微博|百度|懂车帝|b站|哔哩哔哩|头条|腾讯|夸克|猫眼|豆瓣|36氪|51cto|52破解|acfun|a站|csdn|github|米游社|爱范儿|it之家|掘金|网易|新浪|少数派|澎湃|气象预警|微信读书|第一财经|游研社|财联社|快手|好游快爆).*(热搜|热点|热榜|榜单|新闻|有什么)", priority=999)
     async def natural_hotsearch_interceptor(self, event: AstrMessageEvent):
         """
         强行拦截自然语言提问（如“今日微博热搜”、“b站有什么热点”），
@@ -714,7 +738,7 @@ class HotSearchPlugin(Star):
             "头条", "腾讯", "夸克", "猫眼", "豆瓣", "36氪", "51cto", "52破解",
             "acfun", "a站", "csdn", "github", "米游社", "爱范儿", "it之家",
             "掘金", "网易", "新浪", "少数派", "澎湃", "气象预警", "微信读书",
-            "第一财经", "游研社"
+            "第一财经", "游研社", "财联社", "快手", "好游快爆"
         ]
         
         target_p = ""
@@ -741,7 +765,7 @@ class HotSearchPlugin(Star):
         任何只说不做的行为都是被严厉禁止的。请立即抛出工具调用。
         
         Args:
-            platform(string): 平台名称，必须是以下之一：抖音、小红书、知乎、微博、百度、懂车帝、哔哩哔哩、B站、头条、腾讯、夸克、猫眼、豆瓣、36氪、51CTO、52破解、AcFun、A站、CSDN、HelloGitHub、米游社、爱范儿、IT之家、掘金、网易新闻、新浪新闻、少数派、澎湃新闻、气象预警、微信读书、第一财经、游研社。
+            platform(string): 平台名称，必须是以下之一：抖音、小红书、知乎、微博、百度、懂车帝、哔哩哔哩、B站、头条、腾讯、夸克、猫眼、豆瓣、36氪、51CTO、52破解、AcFun、A站、CSDN、HelloGitHub、米游社、爱范儿、IT之家、掘金、网易新闻、新浪新闻、少数派、澎湃新闻、气象预警、微信读书、第一财经、游研社、财联社、快手、好游快爆。
             extra_args(string): 附加参数，比如猫眼支持“电影/电视剧”、豆瓣支持“国内剧/美剧”等，没有则留空。
         """
         p = platform.lower()
@@ -808,6 +832,12 @@ class HotSearchPlugin(Star):
             async for r in self.yicai(wrapped): yield r
         elif p in ["游研社"]:
             async for r in self.yystv(wrapped): yield r
+        elif p in ["财联社"]:
+            async for r in self.cls(wrapped): yield r
+        elif p in ["快手"]:
+            async for r in self.kuaishou(wrapped): yield r
+        elif p in ["好游快爆"]:
+            async for r in self.hykb(wrapped): yield r
         else:
             yield event.plain_result(f"暂不支持该平台：{platform}，请检查平台名称。")
 
@@ -846,6 +876,9 @@ class HotSearchPlugin(Star):
             "• 微信读书热搜 (指令: 微信读书 热搜/新书/小说/总榜)\n"
             "• 第一财经热搜\n"
             "• 游研社热搜\n\n"
+            "• 财联社热搜\n"
+            "• 快手热搜\n"
+            "• 好游快爆热搜\n\n"
         )
         yield event.plain_result(text)
 
