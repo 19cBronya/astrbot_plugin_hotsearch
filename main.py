@@ -9,6 +9,7 @@ from pathlib import Path
 
 from astrbot.api import AstrBotConfig, logger
 from astrbot.api.event import AstrMessageEvent, filter
+from astrbot.api.message_components import Image, Node, Nodes, Plain
 from astrbot.api.star import Context, Star, register
 from astrbot.core.message.message_event_result import MessageChain
 
@@ -146,6 +147,7 @@ class HotSearchPlugin(Star):
         self.groups = getattr(config, "groups", []) or []
         self.push_time = getattr(config, "push_time", "")
         self.push_items = getattr(config, "push_items", []) or []
+        self.forward_message = getattr(config, "forward_message", False)
 
         # 任务控制：用于安全取消旧任务、防止并发推送
         self._stop_event = asyncio.Event()
@@ -360,7 +362,8 @@ class HotSearchPlugin(Star):
 
             logger.info(
                 f"[HotSearch] 开始定时推送: {self.push_items}，"
-                f"时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                f"时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}，"
+                f"模式: {'合并转发' if self.forward_message else '逐条发送'}"
             )
             # 先标记推送时间，防止锁内多次执行
             self._last_push_time = now_ts
@@ -378,76 +381,174 @@ class HotSearchPlugin(Star):
                 "yystv": "游研社", "cls": "财联社", "kuaishou": "快手", "hykb": "好游快爆"
             }
 
-            for item in self.push_items:
-                # 1. Get API URL and Format
-                api_url = getattr(self, f"{item}_api", None)
-                fmt = getattr(self, f"{item}_format", "image")
-                name_cn = NAME_CN_MAP.get(item, item)
-
-                if not api_url:
-                    continue
-
-                # 2. Handle Extra Params
-                extra = {}
-                if item == "baidu": extra = {"type": self.baidu_type}
-                elif item == "maoyan": extra = {"type": self.maoyan_type}
-                elif item == "douban": extra = {"category": "movie"} # 默认电影
-                elif item == "kr36": extra = {"type": "hot"}
-                elif item == "pojie52": extra = {"type": "hot"}
-                elif item == "acfun": extra = {"type": "-1"} # 综合
-                elif item == "hellogithub": extra = {"type": "featured"}
-                elif item == "miyoushe": extra = {"game": "2", "type": "1"} # 原神公告
-                elif item == "ithome": extra = {"type": "hot"}
-                elif item == "juejin": extra = {"type": "1"} # 综合
-                elif item == "sina": extra = {"type": "all"}
-                elif item == "sspai": extra = {"type": "hot"}
-                elif item == "weread": extra = {"type": "rising"}
-                elif item == "weatheralarm":
-                    # 气象预警需要省份，定时推送无法提供，暂不推送或推全国（如果API支持空）
-                    # 这里暂且跳过或传空
-                    continue
-
-                # 3. Handle Format Key
-                fmt_key = "format"
-                if item == "tencent": fmt_key = "type"
-
-                # 4. Request
-                try:
-                    result = await self._request_hotsearch(api_url, fmt, self.global_apikey, extra, fmt_key)
-                    if not result:
-                        continue
-
-                    # 5. Send to Groups
-                    for group_id in self.groups:
-                        try:
-                            chain = MessageChain()
-                            if result.get("image_path"):
-                                chain = chain.file_image(result["image_path"])
-                            elif result.get("text"):
-                                chain = chain.message(result["text"])
-
-                            await self.context.send_message(group_id, chain)
-                            await asyncio.sleep(1) # 避免刷屏
-                        except Exception as e:
-                            logger.error(f"推送 {item} 到 {group_id} 失败: {e}")
-
-                    # 6. Cleanup
-                    if result.get("image_path"):
-                        try:
-                            os.unlink(result["image_path"])
-                        except:
-                            pass
-
-                    # Platform interval
-                    await asyncio.sleep(3)
-
-                except Exception as e:
-                    logger.error(f"定时推送 {item} 失败: {e}")
+            if self.forward_message:
+                await self._push_as_forward_message(NAME_CN_MAP)
+            else:
+                await self._push_per_item(NAME_CN_MAP)
 
         logger.info(
             f"[HotSearch] 定时推送完成，"
             f"下次冷却期结束: {datetime.datetime.fromtimestamp(self._last_push_time + self._min_push_interval).strftime('%Y-%m-%d %H:%M:%S')}"
         )
+
+    async def _push_per_item(self, NAME_CN_MAP: dict):
+        """逐条发送模式：每个平台独立推送一条消息。"""
+        for item in self.push_items:
+            api_url = getattr(self, f"{item}_api", None)
+            fmt = getattr(self, f"{item}_format", "image")
+            name_cn = NAME_CN_MAP.get(item, item)
+
+            if not api_url:
+                continue
+
+            # Handle Extra Params
+            extra = {}
+            if item == "baidu": extra = {"type": self.baidu_type}
+            elif item == "maoyan": extra = {"type": self.maoyan_type}
+            elif item == "douban": extra = {"category": "movie"}
+            elif item == "kr36": extra = {"type": "hot"}
+            elif item == "pojie52": extra = {"type": "hot"}
+            elif item == "acfun": extra = {"type": "-1"}
+            elif item == "hellogithub": extra = {"type": "featured"}
+            elif item == "miyoushe": extra = {"game": "2", "type": "1"}
+            elif item == "ithome": extra = {"type": "hot"}
+            elif item == "juejin": extra = {"type": "1"}
+            elif item == "sina": extra = {"type": "all"}
+            elif item == "sspai": extra = {"type": "hot"}
+            elif item == "weread": extra = {"type": "rising"}
+            elif item == "weatheralarm":
+                continue
+
+            fmt_key = "format"
+            if item == "tencent": fmt_key = "type"
+
+            try:
+                result = await self._request_hotsearch(api_url, fmt, self.global_apikey, extra, fmt_key)
+                if not result:
+                    continue
+
+                for group_id in self.groups:
+                    try:
+                        chain = MessageChain()
+                        if result.get("image_path"):
+                            chain = chain.file_image(result["image_path"])
+                        elif result.get("text"):
+                            chain = chain.message(result["text"])
+
+                        await self.context.send_message(group_id, chain)
+                        await asyncio.sleep(1)
+                    except Exception as e:
+                        logger.error(f"推送 {item} 到 {group_id} 失败: {e}")
+
+                if result.get("image_path"):
+                    try:
+                        os.unlink(result["image_path"])
+                    except:
+                        pass
+
+                await asyncio.sleep(3)
+
+            except Exception as e:
+                logger.error(f"定时推送 {item} 失败: {e}")
+
+    async def _push_as_forward_message(self, NAME_CN_MAP: dict):
+        """合并转发模式：将所有平台热搜打包为一条转发消息。"""
+        nodes: list[Node] = []
+        temp_image_paths: list[str] = []
+
+        # 用于转发消息节点的发送者 QQ 号（0 表示机器人自身）
+        BOT_UIN = "0"
+        # 单条文本最大长度（超过则截断）
+        MAX_TEXT_LEN = 4000
+
+        for item in self.push_items:
+            api_url = getattr(self, f"{item}_api", None)
+            name_cn = NAME_CN_MAP.get(item, item)
+
+            if not api_url:
+                continue
+
+            # Handle Extra Params
+            extra = {}
+            if item == "baidu": extra = {"type": self.baidu_type}
+            elif item == "maoyan": extra = {"type": self.maoyan_type}
+            elif item == "douban": extra = {"category": "movie"}
+            elif item == "kr36": extra = {"type": "hot"}
+            elif item == "pojie52": extra = {"type": "hot"}
+            elif item == "acfun": extra = {"type": "-1"}
+            elif item == "hellogithub": extra = {"type": "featured"}
+            elif item == "miyoushe": extra = {"game": "2", "type": "1"}
+            elif item == "ithome": extra = {"type": "hot"}
+            elif item == "juejin": extra = {"type": "1"}
+            elif item == "sina": extra = {"type": "all"}
+            elif item == "sspai": extra = {"type": "hot"}
+            elif item == "weread": extra = {"type": "rising"}
+            elif item == "weatheralarm":
+                continue
+
+            # 合并转发模式下，优先使用 text 格式获取内容
+            fmt_key = "format"
+            if item == "tencent": fmt_key = "type"
+
+            try:
+                # 先用用户配置的格式请求
+                user_fmt = getattr(self, f"{item}_format", "image")
+                result = await self._request_hotsearch(api_url, user_fmt, self.global_apikey, extra, fmt_key)
+                if not result:
+                    continue
+
+                node_chain = MessageChain()
+
+                if result.get("image_path"):
+                    # 图片结果：使用 Image 组件嵌入转发节点
+                    node_chain.chain.append(Image(file=result["image_path"]))
+                    temp_image_paths.append(result["image_path"])
+                elif result.get("text"):
+                    text_content = result["text"]
+                    if len(text_content) > MAX_TEXT_LEN:
+                        text_content = text_content[:MAX_TEXT_LEN - 3] + "..."
+                    # 为转发消息添加平台标题头
+                    node_chain.chain.append(Plain(text_content))
+
+                if not node_chain.chain:
+                    continue
+
+                nodes.append(Node(
+                    content=node_chain.chain,
+                    name=name_cn,
+                    uin=BOT_UIN,
+                ))
+
+            except Exception as e:
+                logger.error(f"转发消息构建 {item} 失败: {e}")
+
+        if not nodes:
+            logger.warning("[HotSearch] 转发消息无有效节点，跳过推送")
+            # 清理临时图片
+            for p in temp_image_paths:
+                try:
+                    os.unlink(p)
+                except:
+                    pass
+            return
+
+        forward_chain = MessageChain()
+        forward_chain.chain.append(Nodes(nodes=nodes))
+
+        for group_id in self.groups:
+            try:
+                await self.context.send_message(group_id, forward_chain)
+                logger.info(f"[HotSearch] 合并转发消息已推送到 {group_id}，包含 {len(nodes)} 个平台")
+                await asyncio.sleep(1)
+            except Exception as e:
+                logger.error(f"转发消息推送到 {group_id} 失败: {e}")
+
+        # 清理临时图片
+        for p in temp_image_paths:
+            try:
+                os.unlink(p)
+            except:
+                pass
 
     @filter.command("抖音热搜", alias={"抖音实时热搜", "抖音榜", "抖音热点", "抖音"})
     async def douyin(self, event: AstrMessageEvent):
