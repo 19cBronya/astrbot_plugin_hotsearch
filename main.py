@@ -16,6 +16,40 @@ from astrbot.core.message.message_event_result import MessageChain
 PLUGIN_DATA_DIR = Path("data", "plugins_data", "astrbot_hotsearch")
 PLUGIN_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+# ── 模块级共享状态 ──────────────────────────────────────────────
+# AstrBot 框架在配置变更/插件刷新时可能不调用 terminate() 就重新加载插件，
+# 导致多个 _daily_task 实例同时运行。下面的共享变量确保即使多实例并存，
+# 推送也受到跨实例的去重保护。
+# ────────────────────────────────────────────────────────────────
+import threading as _threading
+
+_shared_push_lock = _threading.Lock()
+_shared_last_push_time: float = 0.0       # 模块级上次推送时间戳(秒)
+_SHARED_MIN_PUSH_INTERVAL: float = 300.0  # 模块级冷却间隔(秒)
+_PUSH_WINDOW_TOLERANCE: float = 120.0     # 推送时间窗口容忍度(秒)，提前超过此值视为误唤醒
+
+# 持久化时间戳文件（防御 importlib.reload 后模块级变量丢失）
+def _get_persist_stamp_path() -> Path:
+    return PLUGIN_DATA_DIR / ".last_push_stamp"
+
+def _read_persisted_stamp() -> float:
+    """读取持久化时间戳，用于补充模块级变量的跨 reload 能力。"""
+    try:
+        p = _get_persist_stamp_path()
+        if p.exists():
+            return float(p.read_text().strip())
+    except Exception:
+        pass
+    return 0.0
+
+def _write_persisted_stamp(ts: float):
+    """写入持久化时间戳。"""
+    try:
+        _get_persist_stamp_path().write_text(str(ts))
+    except Exception:
+        pass
+
+
 class _CmdWrappedEvent:
     """包装原始 event，使 get_message_str 返回伪造的指令字符串，便于在 LLM Tool 中复用现有指令 handler。"""
 
@@ -35,7 +69,7 @@ class _CmdWrappedEvent:
     "astrbot_hotsearch",
     "柠柚",
     "实时热搜聚合，支持抖音/小红书/知乎/微博/百度/懂车帝/哔哩哔哩/腾讯/头条/猫眼票房/夸克/豆瓣/36氪/51CTO/52破解/AcFun/CSDN/HelloGitHub/米游社/爱范儿/IT之家/掘金/网易新闻/新浪新闻/少数派/澎湃新闻/气象预警/微信读书/第一财经/游研社/财联社/快手/好游快爆，输出图片或文本",
-    "1.0.7",
+    "1.0.8",
 )
 class HotSearchPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -266,7 +300,7 @@ class HotSearchPlugin(Star):
         # 支持多个时间点，使用中文或英文逗号分隔
         time_strs = self.push_time.replace("，", ",").split(",")
         candidates = []
-        
+
         for t_str in time_strs:
             parts = t_str.strip().split(":")
             if len(parts) != 2:
@@ -274,18 +308,42 @@ class HotSearchPlugin(Star):
             try:
                 h, m = map(int, parts)
                 target = now.replace(hour=h, minute=m, second=0, microsecond=0)
-                if target <= now:
+                if target < now:  # 使用 < 而非 <=，同秒视为仍需推送
                     target += datetime.timedelta(days=1)
                 candidates.append(target)
             except ValueError:
                 continue
-        
+
         if not candidates:
             # 如果解析失败，返回 -1
             return -1.0
-            
+
         next_push = min(candidates)
         return (next_push - now).total_seconds()
+
+    def _is_near_push_time(self) -> bool:
+        """
+        检查当前时间是否在任一配置推送时间 ± 容忍窗口内。
+        用于防御旧任务残留导致的提前唤醒。
+        """
+        now = datetime.datetime.now()
+        time_strs = self.push_time.replace("，", ",").split(",")
+        for t_str in time_strs:
+            parts = t_str.strip().split(":")
+            if len(parts) != 2:
+                continue
+            try:
+                h, m = map(int, parts)
+                target = now.replace(hour=h, minute=m, second=0, microsecond=0)
+                diff = abs((now - target).total_seconds())
+                # 同时检查当天和昨天/明天的窗口（处理跨日边界）
+                if diff <= _PUSH_WINDOW_TOLERANCE:
+                    return True
+                if diff >= 86_400 - _PUSH_WINDOW_TOLERANCE:
+                    return True
+            except ValueError:
+                continue
+        return False
 
     async def _sleep_or_stop(self, seconds: float) -> bool:
         """
@@ -340,55 +398,78 @@ class HotSearchPlugin(Star):
                     break
 
     async def _push_to_groups(self):
-        """定时推送（带防重复机制和锁保护）。"""
+        """定时推送（带防重复机制、推送时间窗口校验和跨实例去重保护）。"""
         if not self.groups or not self.push_items:
             return
 
-        # 快速路径：跳过冷却期内的重复触发（无锁，快速返回）
-        now_ts = time.time()
-        if now_ts - self._last_push_time < self._min_push_interval:
+        # ── 0. 推送时间窗口校验（防御旧任务残留导致的提前唤醒） ──
+        # 检查当前时间是否在配置的推送时间 ± 容忍窗口内。
+        # 如果差距过大，说明是被"幽灵任务"提前唤醒的，跳过并等待下次正常唤醒。
+        if not self._is_near_push_time():
+            now_dt = datetime.datetime.now()
             logger.warning(
-                f"[HotSearch] 距离上次推送仅 {now_ts - self._last_push_time:.0f} 秒，"
-                f"少于 {self._min_push_interval:.0f} 秒冷却时间，跳过本次推送"
+                f"[HotSearch] ⚠️ 疑似旧任务残留导致提前/延迟唤醒："
+                f"当前 {now_dt.strftime('%H:%M:%S')} 不在推送时间窗口内"
+                f"（推送时间: {self.push_time}，容忍度: ±{_PUSH_WINDOW_TOLERANCE:.0f} 秒），跳过本次推送"
             )
             return
 
-        async with self._push_lock:
-            # 二次检查（拿锁后再次确认，避免 TOCTOU 竞态）
+        # ── 1. 跨实例去重：加锁 → 检查 → 标记 → 解锁 → 推送 ──
+        # "检查+标记"操作在锁内完成（微秒级），实际推送在锁外执行（可能分钟级）。
+        # 其他实例在锁内看到已标记的时间戳后会自动跳过，无需等待推送完成。
+        with _shared_push_lock:
             now_ts = time.time()
-            if now_ts - self._last_push_time < self._min_push_interval:
-                logger.warning("[HotSearch] 冷却期内，跳过重复推送（锁内二次检查）")
+
+            # 1a. 模块级冷却期检查
+            if now_ts - _shared_last_push_time < _SHARED_MIN_PUSH_INTERVAL:
+                logger.warning(
+                    f"[HotSearch] 冷却期内：距上次推送仅 {now_ts - _shared_last_push_time:.0f} 秒，"
+                    f"少于 {_SHARED_MIN_PUSH_INTERVAL:.0f} 秒，跳过"
+                )
                 return
 
-            logger.info(
-                f"[HotSearch] 开始定时推送: {self.push_items}，"
-                f"时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}，"
-                f"模式: {'合并转发' if self.forward_message else '逐条发送'}"
-            )
-            # 先标记推送时间，防止锁内多次执行
+            # 1b. 持久化时间戳检查（防御 importlib.reload 后模块级变量重置）
+            persisted = _read_persisted_stamp()
+            if now_ts - persisted < _SHARED_MIN_PUSH_INTERVAL:
+                _shared_last_push_time = max(_shared_last_push_time, persisted)
+                logger.warning(
+                    f"[HotSearch] 持久化冷却期内：距上次推送仅 {now_ts - persisted:.0f} 秒，跳过"
+                )
+                return
+
+            # ✅ 标记推送时间（在锁内，防止竞态）
+            _shared_last_push_time = now_ts
+            _write_persisted_stamp(now_ts)
             self._last_push_time = now_ts
 
-            # 中文名映射
-            NAME_CN_MAP = {
-                "douyin": "抖音", "xhs": "小红书", "zhihu": "知乎", "weibo": "微博",
-                "baidu": "百度", "dcd": "懂车帝", "bilibili": "哔哩哔哩", "toutiao": "头条",
-                "tencent": "腾讯", "quark": "夸克", "maoyan": "猫眼", "douban": "豆瓣",
-                "kr36": "36氪", "cto51": "51CTO", "pojie52": "52破解", "acfun": "AcFun",
-                "csdn": "CSDN", "hellogithub": "HelloGitHub", "miyoushe": "米游社",
-                "ifanr": "爱范儿", "ithome": "IT之家", "juejin": "掘金", "netease": "网易新闻",
-                "sina": "新浪新闻", "sspai": "少数派", "thepaper": "澎湃新闻",
-                "weatheralarm": "气象预警", "weread": "微信读书", "yicai": "第一财经",
-                "yystv": "游研社", "cls": "财联社", "kuaishou": "快手", "hykb": "好游快爆"
-            }
+        # ── 2. 实际推送（锁外，耗时操作不影响其他实例的去重判断） ──
+        logger.info(
+            f"[HotSearch] 开始定时推送: {self.push_items}，"
+            f"时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}，"
+            f"模式: {'合并转发' if self.forward_message else '逐条发送'}"
+        )
 
-            if self.forward_message:
-                await self._push_as_forward_message(NAME_CN_MAP)
-            else:
-                await self._push_per_item(NAME_CN_MAP)
+        # 中文名映射
+        NAME_CN_MAP = {
+            "douyin": "抖音", "xhs": "小红书", "zhihu": "知乎", "weibo": "微博",
+            "baidu": "百度", "dcd": "懂车帝", "bilibili": "哔哩哔哩", "toutiao": "头条",
+            "tencent": "腾讯", "quark": "夸克", "maoyan": "猫眼", "douban": "豆瓣",
+            "kr36": "36氪", "cto51": "51CTO", "pojie52": "52破解", "acfun": "AcFun",
+            "csdn": "CSDN", "hellogithub": "HelloGitHub", "miyoushe": "米游社",
+            "ifanr": "爱范儿", "ithome": "IT之家", "juejin": "掘金", "netease": "网易新闻",
+            "sina": "新浪新闻", "sspai": "少数派", "thepaper": "澎湃新闻",
+            "weatheralarm": "气象预警", "weread": "微信读书", "yicai": "第一财经",
+            "yystv": "游研社", "cls": "财联社", "kuaishou": "快手", "hykb": "好游快爆"
+        }
+
+        if self.forward_message:
+            await self._push_as_forward_message(NAME_CN_MAP)
+        else:
+            await self._push_per_item(NAME_CN_MAP)
 
         logger.info(
             f"[HotSearch] 定时推送完成，"
-            f"下次冷却期结束: {datetime.datetime.fromtimestamp(self._last_push_time + self._min_push_interval).strftime('%Y-%m-%d %H:%M:%S')}"
+            f"下次冷却期结束: {datetime.datetime.fromtimestamp(_shared_last_push_time + _SHARED_MIN_PUSH_INTERVAL).strftime('%Y-%m-%d %H:%M:%S')}"
         )
 
     async def _push_per_item(self, NAME_CN_MAP: dict):
